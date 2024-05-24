@@ -20,8 +20,9 @@ app.use(cors({
 }));
 
 const sanitizeFilename = (filename) => {
-  return filename.replace(/[^a-z0-9_\-]/gi, '_');
-};
+    return filename.replace(/[^a-z0-9_.\-]/gi, '_'); // Allow periods and hyphens in filenames
+  };
+  
 
 app.get('/download', async (req, res) => {
   const videoURL = req.query.url;
