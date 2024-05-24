@@ -1,0 +1,14 @@
+{
+    "version": 2,
+    "routes": [
+      {
+        "src": "/download",
+        "dest": "/index.js"
+      }
+    ],
+    "env": {
+      "ALLOWED_ORIGINS": "https://www.rukshantharindu.link"
+    }
+  }
+
+  
