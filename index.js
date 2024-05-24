@@ -19,10 +19,6 @@ app.use(cors({
   }
 }));
 
-const sanitizeFilename = (filename) => {
-  return filename.replace(/[^a-z0-9_.\-]/gi, '_'); // Allow periods and hyphens in filenames
-};
-
 app.get('/download', async (req, res) => {
   const videoURL = req.query.url;
   if (!videoURL) {
@@ -34,11 +30,9 @@ app.get('/download', async (req, res) => {
     console.log(`Fetching video info for URL: ${videoURL}`);
     const info = await ytdl.getInfo(videoURL);
     const format = ytdl.chooseFormat(info.formats, { filter: 'videoandaudio', quality: 'highest', container: 'mp4' });
-    const sanitizedFilename = sanitizeFilename(info.videoDetails.title);
 
-    res.setHeader('Content-Disposition', `attachment; filename="${sanitizedFilename}.mp4"`);
-    res.setHeader('Content-Type', 'video/mp4');
-    res.setHeader('Accept-Ranges', 'bytes'); // Add Accept-Ranges header
+    res.setHeader('Content-Type', format.type);
+    res.setHeader('Content-Length', format.contentLength);
 
     const videoStream = ytdl(videoURL, { format: format });
 
@@ -59,7 +53,6 @@ app.get('/download', async (req, res) => {
     res.status(500).send('Error downloading video');
   }
 });
-
 
 app.listen(port, () => {
   console.log(`Server started on PORT ${port}`);
