@@ -3,9 +3,8 @@ const cors = require('cors');
 const ytdl = require('ytdl-core');
 
 const app = express();
-const port = process.env.PORT || 9002;
+const port = 9002;
 
-// Update CORS configuration
 const allowedOrigins = ['https://www.rukshantharindu.link'];
 app.use(cors({
   origin: function (origin, callback) {
@@ -25,6 +24,8 @@ const sanitizeFilename = (filename) => {
 
 app.get('/download', async (req, res) => {
   const videoURL = req.query.url;
+  const format = req.query.format || 'mp4'; // Default to mp4
+
   if (!videoURL) {
     console.error('URL is required');
     return res.status(400).send('URL is required');
@@ -33,13 +34,19 @@ app.get('/download', async (req, res) => {
   try {
     console.log(`Fetching video info for URL: ${videoURL}`);
     const info = await ytdl.getInfo(videoURL);
-    const format = ytdl.chooseFormat(info.formats, { filter: 'videoandaudio', quality: 'highest', container: 'mp4' });
+    let chosenFormat;
+    if (format === 'mp3') {
+      // Always choose the highest quality audio format
+      chosenFormat = ytdl.chooseFormat(info.formats, { filter: 'audioonly', quality: 'highestaudio' });
+    } else {
+      chosenFormat = ytdl.chooseFormat(info.formats, { filter: 'videoandaudio', quality: 'highest', container: 'mp4' });
+    }
     const sanitizedFilename = sanitizeFilename(info.videoDetails.title);
 
-    res.setHeader('Content-Disposition', `attachment; filename="${sanitizedFilename}.mp4"`);
-    res.setHeader('Content-Type', 'video/mp4');
+    res.setHeader('Content-Disposition', `attachment; filename="${sanitizedFilename}.${format}"`);
+    res.setHeader('Content-Type', format === 'mp3' ? 'audio/mpeg' : 'video/mp4');
 
-    const videoStream = ytdl(videoURL, { format: format });
+    const videoStream = ytdl(videoURL, { format: chosenFormat });
 
     videoStream.on('error', (err) => {
       console.error('Error during download:', err);
@@ -59,11 +66,6 @@ app.get('/download', async (req, res) => {
   }
 });
 
-
 app.listen(port, () => {
-  console.log(`Server started on PORT ${port}`);
+  console.log(`Server is running on http://localhost:${port}`);
 });
-
-
-// netstat -ano | findstr :4000
-// taskkill /PID <PID> /F
