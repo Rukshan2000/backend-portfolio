@@ -3,7 +3,7 @@ const cors = require('cors');
 const ytdl = require('ytdl-core');
 
 const app = express();
-const port = process.env.PORT || 9001;
+const port = process.env.PORT || 9002;
 
 // Update CORS configuration
 const allowedOrigins = ['https://www.rukshantharindu.link'];
@@ -19,6 +19,10 @@ app.use(cors({
   }
 }));
 
+const sanitizeFilename = (filename) => {
+  return filename.replace(/[^a-z0-9_\-]/gi, '_');
+};
+
 app.get('/download', async (req, res) => {
   const videoURL = req.query.url;
   if (!videoURL) {
@@ -30,9 +34,10 @@ app.get('/download', async (req, res) => {
     console.log(`Fetching video info for URL: ${videoURL}`);
     const info = await ytdl.getInfo(videoURL);
     const format = ytdl.chooseFormat(info.formats, { filter: 'videoandaudio', quality: 'highest', container: 'mp4' });
+    const sanitizedFilename = sanitizeFilename(info.videoDetails.title);
 
-    res.setHeader('Content-Type', format.type);
-    res.setHeader('Content-Length', format.contentLength);
+    res.setHeader('Content-Disposition', `attachment; filename="${sanitizedFilename}.mp4"`);
+    res.setHeader('Content-Type', 'video/mp4');
 
     const videoStream = ytdl(videoURL, { format: format });
 
@@ -54,6 +59,11 @@ app.get('/download', async (req, res) => {
   }
 });
 
+
 app.listen(port, () => {
   console.log(`Server started on PORT ${port}`);
 });
+
+
+// netstat -ano | findstr :4000
+// taskkill /PID <PID> /F
