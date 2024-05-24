@@ -20,9 +20,8 @@ app.use(cors({
 }));
 
 const sanitizeFilename = (filename) => {
-    return filename.replace(/[^a-z0-9_.\-]/gi, '_'); // Allow periods and hyphens in filenames
-  };
-  
+  return filename.replace(/[^a-z0-9_.\-]/gi, '_'); // Allow periods and hyphens in filenames
+};
 
 app.get('/download', async (req, res) => {
   const videoURL = req.query.url;
@@ -39,6 +38,7 @@ app.get('/download', async (req, res) => {
 
     res.setHeader('Content-Disposition', `attachment; filename="${sanitizedFilename}.mp4"`);
     res.setHeader('Content-Type', 'video/mp4');
+    res.setHeader('Accept-Ranges', 'bytes'); // Add Accept-Ranges header
 
     const videoStream = ytdl(videoURL, { format: format });
 
@@ -64,7 +64,3 @@ app.get('/download', async (req, res) => {
 app.listen(port, () => {
   console.log(`Server started on PORT ${port}`);
 });
-
-
-// netstat -ano | findstr :4000
-// taskkill /PID <PID> /F
